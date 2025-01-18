@@ -33,12 +33,16 @@ Future<List<T>?> showMultiSelectBottomSheet<T>({
     isScrollControlled: true,
     isDismissible: isDismissible,
     enableDrag: enableDrag,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
           // Filtrlash: qidiruv maydonidagi so‘z asosida.
           final filteredItems = items.where((item) => getName(item).toLowerCase().contains(searchController.text.toLowerCase())).toList();
 
+          final theme = Theme.of(context);
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -51,13 +55,13 @@ Future<List<T>?> showMultiSelectBottomSheet<T>({
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sarlavha va close ikonkasi
+                  // Sarlavha va close ikonkasi.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -81,22 +85,23 @@ Future<List<T>?> showMultiSelectBottomSheet<T>({
                     children: [
                       TextField(
                         controller: searchController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Qidiruv',
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
+                          labelStyle: theme.textTheme.labelMedium,
+                          prefixIcon: const Icon(Icons.search),
+                          border: const OutlineInputBorder(),
                         ),
-                        onChanged: (_) => setState(() {}), // Faqat filter yangilanadi.
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 4),
-                      // Minimal joy egallaydigan va o‘ngga hizalanadigan "Tozalash" tugmasi.
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
                             setState(() {
                               searchController.clear();
-                              selectedIds.clear();
+                              // Istalgan holatda selectedIds tozalanishi mumkin.
+                              // selectedIds.clear();
                             });
                           },
                           style: TextButton.styleFrom(
@@ -145,15 +150,20 @@ Future<List<T>?> showMultiSelectBottomSheet<T>({
                                 );
                               }
                               return CheckboxListTile(
-                                title: Text(getName(item)),
+                                title: Text(
+                                  getName(item),
+                                  style: theme.textTheme.labelMedium,
+                                ),
                                 value: isSelected,
                                 onChanged: toggleSelection,
                                 controlAffinity: ListTileControlAffinity.leading,
-                                activeColor: Theme.of(context).primaryColor,
+                                activeColor: theme.primaryColor,
                               );
                             },
                           )
-                        : const Center(child: Text("Element topilmadi")),
+                        : Center(
+                            child: Text("Element topilmadi", style: theme.textTheme.labelMedium),
+                          ),
                   ),
                   const SizedBox(height: 10),
                   // Saqlash tugmasi.
@@ -182,14 +192,15 @@ Future<List<T>?> showMultiSelectBottomSheet<T>({
 /// ----------------------------------------------------------------
 /// MultiSelectField widgeti – forma maydoni
 /// ----------------------------------------------------------------
-/// Tanlangan elementlarni chip shaklida ko'rsatadi va modalni chaqiradi.
+/// InputDecorator orqali tanlangan elementlar chiplari ko‘rsatiladi va modal bottom sheet orqali elementlarni tanlash imkoniyati beriladi.
+/// Yangi parametrlar orqali ko‘rsatiladigan chiplar qatorining maksimal soni ham belgilanishi mumkin.
 class MultiSelectField<T> extends StatefulWidget {
   final List<T> items;
   final String Function(T) getName;
   final int Function(T) getId;
   final List<int>? initialSelectedIds;
 
-  // Field ustidagi label; bo'sh bo'lsa "Tanlang" chiqadi.
+  // Field ustidagi label; bo'sh bo'lsa "Tanlang" deb ko‘rsatiladi.
   final String labelText;
   final String hintText;
   final Widget? leading;
@@ -203,6 +214,10 @@ class MultiSelectField<T> extends StatefulWidget {
   final bool bottomSheetEnableDrag;
   final double bottomSheetHeightFactor;
   final String? bottomSheetTitle;
+
+  // Chiplar ko'rinishida maksimal qatorda ko'rsatiladigan qatordan soni va har bir qatordagi chiplarning balandligi.
+  final int maxChipLines;
+  final double chipLineHeight;
 
   const MultiSelectField({
     super.key,
@@ -221,6 +236,8 @@ class MultiSelectField<T> extends StatefulWidget {
     this.bottomSheetEnableDrag = false,
     this.bottomSheetHeightFactor = 0.8,
     this.bottomSheetTitle,
+    this.maxChipLines = 2,
+    this.chipLineHeight = 40.0,
   });
 
   @override
@@ -228,7 +245,13 @@ class MultiSelectField<T> extends StatefulWidget {
 }
 
 class _MultiSelectFieldState<T> extends State<MultiSelectField<T>> {
-  List<T> _selectedItems = [];
+  late List<int> _selectedIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIds = widget.initialSelectedIds != null ? List.from(widget.initialSelectedIds!) : [];
+  }
 
   Future<void> _openMultiSelect() async {
     final result = await showMultiSelectBottomSheet<T>(
@@ -236,10 +259,9 @@ class _MultiSelectFieldState<T> extends State<MultiSelectField<T>> {
       items: widget.items,
       getName: widget.getName,
       getId: widget.getId,
-      initialSelectedIds: widget.initialSelectedIds,
+      initialSelectedIds: _selectedIds,
       selectAllWhenIdSelected: widget.selectAllWhenIdSelected,
       itemRender: widget.itemRender,
-      // Bottom sheet parametrlarini uzatish.
       title: widget.bottomSheetTitle ?? (widget.labelText.isNotEmpty ? widget.labelText : "Tanlang"),
       isDismissible: widget.bottomSheetIsDismissible,
       enableDrag: widget.bottomSheetEnableDrag,
@@ -247,48 +269,57 @@ class _MultiSelectFieldState<T> extends State<MultiSelectField<T>> {
     );
     // Foydalanuvchi modalni close qilsa (result == null) tanlov o'zgarmaydi.
     if (result != null) {
-      setState(() {
-        _selectedItems = result;
-      });
-      widget.onSelectionChanged?.call(_selectedItems);
+      _selectedIds = result.map((e) => widget.getId(e)).toList();
+      setState(() {});
+      widget.onSelectionChanged?.call(widget.items.where((item) => _selectedIds.contains(widget.getId(item))).toList());
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final displayTextStyle = theme.textTheme.labelMedium;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Field ustidagi label (agar berilgan bo‘lsa)
         if (widget.labelText.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
-            child: Text(widget.labelText, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              widget.labelText,
+              style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
           ),
         InkWell(
           onTap: _openMultiSelect,
           child: InputDecorator(
             decoration: InputDecoration(
-              hintText: _selectedItems.isEmpty ? widget.hintText : null,
-              border: const OutlineInputBorder(),
-              prefixIcon: widget.leading,
-              suffixIcon: widget.trailing ?? const Icon(Icons.arrow_drop_down),
-            ),
-            child: _selectedItems.isNotEmpty
-                ? SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: _selectedItems
-                          .map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Chip(label: Text(widget.getName(item))),
-                            ),
-                          )
-                          .toList(),
+                hintText: _selectedIds.isEmpty ? widget.hintText : null,
+                border: const OutlineInputBorder(),
+                prefixIcon: widget.leading,
+                suffixIcon: widget.trailing ?? const Icon(Icons.arrow_drop_down),
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12)),
+            child: _selectedIds.isNotEmpty
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: (widget.chipLineHeight + 5) * widget.maxChipLines,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        children: widget.items
+                            .where((item) => _selectedIds.contains(widget.getId(item)))
+                            .map((item) => Chip(
+                                  label: Text(widget.getName(item), style: displayTextStyle),
+                                  padding: EdgeInsets.zero,
+                                  backgroundColor: theme.chipTheme.backgroundColor,
+                                ))
+                            .toList(),
+                      ),
                     ),
                   )
-                : Text(widget.hintText, style: TextStyle(color: Theme.of(context).hintColor)),
+                : Text(widget.hintText, style: TextStyle(color: theme.hintColor)),
           ),
         ),
       ],

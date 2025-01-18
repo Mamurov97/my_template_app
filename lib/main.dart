@@ -1,61 +1,86 @@
 import 'package:flutter/material.dart';
-import 'components/multi_select_field.dart';
+import 'package:my_template_app/components/single_select_field.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-/// Demo ilova uchun asosiy widget.
+/// Demo ilovasi: SingleSelectField widgetini qanday ishlatish.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MultiSelect Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MultiSelectDemoPage(),
+      title: 'SingleSelect Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const SingleSelectDemoPage(),
     );
   }
 }
 
-class MultiSelectDemoPage extends StatefulWidget {
-  const MultiSelectDemoPage({super.key});
+class SingleSelectDemoPage extends StatefulWidget {
+  const SingleSelectDemoPage({super.key});
 
   @override
-  State<MultiSelectDemoPage> createState() => _MultiSelectDemoPageState();
+  State<SingleSelectDemoPage> createState() => _SingleSelectDemoPageState();
 }
 
-class _MultiSelectDemoPageState extends State<MultiSelectDemoPage> {
+class _SingleSelectDemoPageState extends State<SingleSelectDemoPage> {
   final List<Item> items = List.generate(
     10,
-    (index) => Item(id: index, name: 'Item $index'),
+        (index) => Item(id: index, name: 'Item $index'),
   );
-  List<Item> selectedItems = [];
+  Item? selectedItem;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MultiSelect Demo')),
+      appBar: AppBar(title: const Text('SingleSelect Demo')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            MultiSelectField<Item>(
+            SingleSelectField<Item>(
               items: items,
               getName: (item) => item.name,
               getId: (item) => item.id,
-              labelText: 'Elementlarni tanlang',
-              hintText: 'Tanlang',
-              initialSelectedIds: selectedItems.map((e) => e.id).toList(),
-              onSelectionChanged: (selectedData) {
-                selectedItems = [...selectedData];
-                setState(() {});
+              selectedItem: selectedItem,
+              labelText: 'Elementni tanlang',
+              hintText: 'Hech nima tanlanmagan',
+              bottomSheetHeightFactor: 0.8,
+              bottomSheetIsDismissible: false,
+              bottomSheetEnableDrag: false,
+              bottomSheetTitle: 'Elementlarni tanlang',
+              // Maxsus itemRenderer: misol uchun, "Item 5" maxsus rang bilan ko'rsatiladi.
+              itemRender: (item, isSelected, onChanged) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.green.shade100 : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(item.name, style: const TextStyle(fontSize: 16)),
+                      if (isSelected)
+                        Icon(Icons.check, color: Theme.of(context).primaryColor),
+                    ],
+                  ),
+                );
+              },
+              onSelectionChanged: (item) {
+                setState(() {
+                  selectedItem = item;
+                });
               },
             ),
             const SizedBox(height: 20),
             Text(
-              'Tanlangan elementlar: ${selectedItems.map((e) => e.name).join(', ')}',
+              'Tanlangan element: ${selectedItem != null ? selectedItem!.name : "Yo\'q"}',
               style: const TextStyle(fontSize: 16),
             ),
           ],
