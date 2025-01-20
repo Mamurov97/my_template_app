@@ -97,3 +97,43 @@ class Item {
 
   Item({required this.id, required this.name});
 }
+
+class WorkerInformationsModel {
+  final String name;
+  final String surname;
+  final String position;
+  final String department;
+  final String phoneNumber;
+  final String email;
+
+  WorkerInformationsModel({
+    required this.name,
+    required this.surname,
+    required this.position,
+    required this.department,
+    required this.phoneNumber,
+    required this.email,
+  });
+
+  factory WorkerInformationsModel.fromJson(Map<String, dynamic> json) {
+    return WorkerInformationsModel(
+      name: json['name'],
+      surname: json['surname'],
+      position: json['position'],
+      department: json['department'],
+      phoneNumber: json['phoneNumber'],
+      email: json['email'],
+    );
+  }
+
+  toJson() {
+    return {
+      'name': name,
+      'surname': surname,
+      'position': position,
+      'department': department,
+      'phoneNumber': phoneNumber,
+      'email': email,
+    };
+  }
+}
