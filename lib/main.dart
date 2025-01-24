@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_template_app/components/single_select_field.dart';
+import 'package:my_template_app/components/multi_select_field.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,9 +29,10 @@ class SingleSelectDemoPage extends StatefulWidget {
 }
 
 class _SingleSelectDemoPageState extends State<SingleSelectDemoPage> {
+  List<Item> selectedItems = [];
   final List<Item> items = List.generate(
     10,
-        (index) => Item(id: index, name: 'Item $index'),
+    (index) => Item(id: index, name: 'Item $index'),
   );
   Item? selectedItem;
 
@@ -43,38 +44,37 @@ class _SingleSelectDemoPageState extends State<SingleSelectDemoPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            SingleSelectField<Item>(
+            MultiSelectField<Item>(
               items: items,
               getName: (item) => item.name,
               getId: (item) => item.id,
-              selectedItem: selectedItem,
+              initialSelectedIds: selectedItems.map((e) => e.id).toList(),
               labelText: 'Elementni tanlang',
               hintText: 'Hech nima tanlanmagan',
               bottomSheetHeightFactor: 0.8,
               bottomSheetIsDismissible: false,
               bottomSheetEnableDrag: false,
               bottomSheetTitle: 'Elementlarni tanlang',
-              // Maxsus itemRenderer: misol uchun, "Item 5" maxsus rang bilan ko'rsatiladi.
-              itemRender: (item, isSelected, onChanged) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.green.shade100 : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(item.name, style: const TextStyle(fontSize: 16)),
-                      if (isSelected)
-                        Icon(Icons.check, color: Theme.of(context).primaryColor),
-                    ],
-                  ),
-                );
-              },
+              // itemRender: (item, isSelected, onChanged) {
+              //   return Container(
+              //     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              //     decoration: BoxDecoration(
+              //       color: isSelected ? Colors.green.shade100 : Colors.transparent,
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //       children: [
+              //         Text(item.name, style: const TextStyle(fontSize: 16)),
+              //         if (isSelected)
+              //           Icon(Icons.check, color: Theme.of(context).primaryColor),
+              //       ],
+              //     ),
+              //   );
+              // },
               onSelectionChanged: (item) {
                 setState(() {
-                  selectedItem = item;
+                  selectedItems = item;
                 });
               },
             ),
