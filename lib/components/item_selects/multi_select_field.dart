@@ -113,10 +113,9 @@ Future<List<T>?> showMultiSelectBottomSheet<T>({
                           onPressed: () {
                             // Qidiruv maydonini tozalash.
                             setState(() {
-                              searchController.clear();
                               // Quyidagi qatorni izohdan olib tashlash orqali
                               // tanlangan elementlar ro'yxatini ham tozalash mumkin.
-                              // selectedIds.clear();
+                              selectedIds.clear();
                             });
                           },
                           style: TextButton.styleFrom(
