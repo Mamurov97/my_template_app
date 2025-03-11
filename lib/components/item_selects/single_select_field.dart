@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// showSingleSelectBottomSheet funksiyasi
 /// ----------------------------------------------------------------
 /// Modal bottom sheet orqali yagona element tanlash.
-/// Qaytarilgan natija null bo‘lishi mumkin (foydalanuvchi close tugmasini bosganda).
+/// Qaytarilgan natija foydalanuvchi bottom sheet-ni yopganida null bo‘lishi mumkin.
 Future<T?> showSingleSelectBottomSheet<T>({
   required BuildContext context,
   required List<T> items,
@@ -12,11 +12,11 @@ Future<T?> showSingleSelectBottomSheet<T>({
   required String Function(T) getName,
   T? selectedItem,
   String title = '',
-  // Bottom sheet balandligini belgilovchi factor (default: 0.8 = 80%).
+  // Bottom sheet ning bo‘yini ekran balandligining qanchalik foizini egallashini belgilaydi (default: 0.8 = 80%).
   double heightFactor = 0.8,
   bool isDismissible = false,
   bool enableDrag = false,
-  // Agar berilsa, har bir elementni moslashtirilgan ko‘rinishda chizish uchun.
+  // Agar berilsa, har bir elementni moslashtirilgan ko‘rinishda chizish uchun funksiya.
   Widget Function(T item, bool isSelected, void Function(bool? value) onChanged)? itemRender,
 }) {
   return showModalBottomSheet<T>(
@@ -41,7 +41,11 @@ Future<T?> showSingleSelectBottomSheet<T>({
   );
 }
 
-/// SingleSelectBottomSheetContent widgeti – modal bottom sheet tarkibi.
+/// ----------------------------------------------------------------
+/// _SingleSelectBottomSheetContent widgeti
+/// ----------------------------------------------------------------
+/// Modal bottom sheet ning asosiy tarkibini tashkil etuvchi widget.
+/// Unda sarlavha, qidiruv maydoni va elementlar ro'yxati mavjud.
 class _SingleSelectBottomSheetContent<T> extends StatefulWidget {
   final List<T> items;
   final int Function(T) getId;
@@ -50,7 +54,7 @@ class _SingleSelectBottomSheetContent<T> extends StatefulWidget {
   final String title;
   final double heightFactor;
 
-  // Maxsus item render (agar berilsa).
+  // Maxsus element chizish funksiyasi (agar berilsa).
   final Widget Function(T item, bool isSelected, void Function(bool? value) onChanged)? itemRender;
 
   const _SingleSelectBottomSheetContent({
@@ -75,10 +79,15 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
   @override
   void initState() {
     super.initState();
+    // Dastlab barcha elementlar ko‘rsatiladi.
     _filteredItems = widget.items;
+    // Qidiruv maydonidagi o‘zgarishlarni kuzatish.
     _searchController.addListener(_onSearchChanged);
   }
 
+  /// Qidiruv maydonidagi o‘zgarishlar yuz berganda:
+  /// - Kiritilgan matnni kichik harflarga o‘tkazamiz.
+  /// - Elementlarni nomlarida qidiruv matni mavjudligini tekshiramiz.
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -88,11 +97,13 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
 
   @override
   void dispose() {
+    // Listenerni olib tashlash va controllerni yopish.
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Element tanlanganda modal bottom sheet-ni yopib, tanlangan elementni qaytaradi.
   void _selectItem(T item) {
     Navigator.pop(context, item);
   }
@@ -106,13 +117,20 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
     final hintStyle = theme.textTheme.labelMedium?.copyWith(color: theme.hintColor);
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 16),
+      // Klaviatura chiqishi holatini ham hisobga olamiz.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 16,
+      ),
       child: SizedBox(
+        // Bottom sheet balandligi ekran balandligining [heightFactor] qismi.
         height: MediaQuery.of(context).size.height * widget.heightFactor,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Sarlavha va close ikonkasi.
+            // Sarlavha va close tugmasi.
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -133,6 +151,7 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
                     ),
                     child: const Icon(Icons.close, size: 20, color: Colors.white),
                   ),
+                  // Close tugmasi bosilganda hech qanday element tanlanmagan holda qaytish.
                   onPressed: () => Navigator.pop(context, null),
                 ),
               ],
@@ -162,6 +181,7 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
                       itemBuilder: (context, index) {
                         final item = _filteredItems[index];
                         final isSelected = widget.selectedItem != null && widget.getId(widget.selectedItem as T) == widget.getId(item);
+                        // Agar maxsus render funksiyasi berilgan bo‘lsa, uni ishlatamiz.
                         if (widget.itemRender != null) {
                           return GestureDetector(
                             onTap: () => _selectItem(item),
@@ -170,6 +190,7 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
                             }),
                           );
                         }
+                        // Aks holda, oddiy ListTile ko‘rinishida chiqaramiz.
                         return ListTile(
                           title: Text(
                             widget.getName(item),
@@ -180,9 +201,7 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
                         );
                       },
                     )
-                  : Center(
-                      child: Text("Ma'lumot yo'q", style: itemStyle),
-                    ),
+                  : Center(child: Text("Ma'lumot yo'q", style: itemStyle)),
             ),
           ],
         ),
@@ -194,11 +213,14 @@ class _SingleSelectBottomSheetContentState<T> extends State<_SingleSelectBottomS
 /// ----------------------------------------------------------------
 /// SingleSelectField widgeti – yagona tanlov forma maydoni
 /// ----------------------------------------------------------------
-/// InputDecorator orqali tanlangan elementni ko‘rsatadi va modal bottom sheet orqali yagona elementni tanlash imkoniyatini beradi.
+/// InputDecorator orqali tanlangan elementni ko‘rsatadi va
+/// modal bottom sheet orqali element tanlash imkoniyatini beradi.
 class SingleSelectField<T> extends StatefulWidget {
   final List<T> items;
   final String Function(T) getName;
   final int Function(T) getId;
+
+  // Dastlab tanlangan element (agar mavjud bo‘lsa).
   final T? selectedItem;
 
   // Field ustidagi label; agar bo‘sh bo‘lsa, "Tanlang" deb ko‘rsatiladi.
@@ -206,6 +228,8 @@ class SingleSelectField<T> extends StatefulWidget {
   final String hintText;
   final Widget? leading;
   final Widget? trailing;
+
+  // Tanlov o‘zgarganida chaqiriladigan callback.
   final ValueChanged<T?>? onSelectionChanged;
 
   // Bottom sheet parametrlarini uzatish.
@@ -214,7 +238,7 @@ class SingleSelectField<T> extends StatefulWidget {
   final bool bottomSheetEnableDrag;
   final String? bottomSheetTitle;
 
-  // Maxsus item render.
+  // Maxsus item render funksiyasi (agar kerak bo‘lsa).
   final Widget Function(T item, bool isSelected, void Function(bool? value) onChanged)? itemRender;
 
   const SingleSelectField({
@@ -240,8 +264,16 @@ class SingleSelectField<T> extends StatefulWidget {
 }
 
 class _SingleSelectFieldState<T> extends State<SingleSelectField<T>> {
+  // Dastlabki tanlangan qiymat widget.parametridan olinadi.
   T? _selectedItem;
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedItem = widget.selectedItem;
+  }
+
+  /// Bottom sheet ochilib, foydalanuvchi element tanlaganida natija qaytariladi.
   Future<void> _openSingleSelect() async {
     final result = await showSingleSelectBottomSheet<T>(
       context: context,
@@ -270,7 +302,7 @@ class _SingleSelectFieldState<T> extends State<SingleSelectField<T>> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Field ustidagi label (agar berilgan bo‘lsa)
+        // Agar label berilgan bo‘lsa, uni yuqorida ko‘rsatish.
         if (widget.labelText.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
