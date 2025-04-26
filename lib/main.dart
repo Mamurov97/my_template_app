@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:my_template_app/components/item_selects/multi_select_field.dart';
+import 'package:my_template_app/components/main_button/main_button.dart';
+import 'package:my_template_app/components/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,13 +20,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MultiSelect Demo',
-      theme: ThemeData(
-        useMaterial3: false,
-        primarySwatch: Colors.blue,
-      ),
-      home: const MultiSelectExample(),
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context,child){
+        AppTheme.init();
+        return MaterialApp(
+          title: 'MultiSelect Demo',
+          theme: AppTheme.data,
+          themeMode: AppTheme.themeMode,
+          home: const MultiSelectExample(),
+        );
+      },
     );
   }
 }
@@ -56,6 +65,7 @@ class _MultiSelectExampleState extends State<MultiSelectExample> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             MultiSelectField<City>(
               items: cities,
@@ -71,6 +81,9 @@ class _MultiSelectExampleState extends State<MultiSelectExample> {
                 });
               },
             ),
+            MainButton(text: 'Saqlash',),
+            MainButton(text: 'Saqlash',onTap: (){},),
+            MainButton(text: 'Saqlash',onTap: (){},onLoading: true,),
           ],
         ),
       ),
