@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:my_template_app/components/item_selects/multi_select_field.dart';
 import 'package:my_template_app/components/main_button/main_button.dart';
 import 'package:my_template_app/components/theme/app_theme.dart';
+import 'package:my_template_app/presentation/components/custom_toast.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,10 +28,11 @@ class MyApp extends StatelessWidget {
       builder: (context,child){
         AppTheme.init();
         return MaterialApp(
+          navigatorKey: CustomToast.navigatorKey,
           title: 'MultiSelect Demo',
           theme: AppTheme.data,
           themeMode: AppTheme.themeMode,
-          home: const MultiSelectExample(),
+          home: MultiSelectExample(),
         );
       },
     );
@@ -84,6 +86,7 @@ class _MultiSelectExampleState extends State<MultiSelectExample> {
             MainButton(text: 'Saqlash',),
             MainButton(text: 'Saqlash',onTap: (){},),
             MainButton(text: 'Saqlash',onTap: (){},onLoading: true,),
+
           ],
         ),
       ),

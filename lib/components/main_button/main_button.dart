@@ -24,6 +24,6 @@ class _MainButtonState extends State<MainButton> {
                 strokeWidth: 2,
                       strokeAlign: 0.1,
               )
-            : Text(widget.text));
+            : Text(widget.text,style: TextStyle(color: Colors.white),));
   }
 }
